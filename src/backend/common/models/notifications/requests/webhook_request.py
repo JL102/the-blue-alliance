@@ -54,17 +54,24 @@ class WebhookRequest(Request):
 
         try:
             response = requests.post(self.url, data=payload, headers=headers)
+            logging.info(f'{response.status_code}, {requests.codes.ok}')
             if response.status_code == requests.codes.ok:
                 self.defer_track_notification(1)
             else:
-				# Auto-raise a specific HTTPError, with message, depending on the status code
+                logging.info(f'hello world, response code={response.status_code} and type={type(response.status_code)}, within400and500={400 <= response.status_code < 500} ')
+                # Auto-raise a specific HTTPError, with message, depending on the status code
                 response.raise_for_status()
+                logging.info("This should not be reached with 404 status")
         except requests.exceptions.HTTPError as error:
+            logging.info('Caught HTTPError')
             logging.error(error)
             err = str(error)
         except Exception as error:
+            logging.info('Caught Exception')
             logging.error(error)
             err = f'Unknown error: {error}'
+        except:
+            logging.info('Caught non error')
 
         return err
 
