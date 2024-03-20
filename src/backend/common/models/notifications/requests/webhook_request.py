@@ -50,8 +50,6 @@ class WebhookRequest(Request):
         # Generate hmac
         headers["X-TBA-HMAC"] = self._generate_webhook_hmac(payload)
 
-        # TODO: Consider more useful way to surface error messages
-        # https://github.com/the-blue-alliance/the-blue-alliance/issues/2576
         err = None
 
         try:
@@ -59,6 +57,7 @@ class WebhookRequest(Request):
             if response.status_code == requests.codes.ok:
                 self.defer_track_notification(1)
             else:
+				# Auto-raise a specific HTTPError, with message, depending on the status code
                 response.raise_for_status()
         except requests.exceptions.HTTPError as error:
             logging.error(error)
