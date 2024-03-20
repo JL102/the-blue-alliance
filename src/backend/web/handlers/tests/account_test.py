@@ -618,9 +618,9 @@ def test_mytba(
     assert context["year"] == mock_year
 
 
-@pytest.mark.parametrize("ping_sent, expected", [(True, "1"), (False, "0")])
+@pytest.mark.parametrize("ping_response, expected", [(None, "1"), ("Some Error", "Some Error")])
 def test_ping_client(
-    ping_sent,
+    ping_response,
     expected,
     login_user,
     captured_templates: List[CapturedTemplate],
@@ -635,7 +635,7 @@ def test_ping_client(
     c1.put()
 
     with web_client, patch.object(
-        TBANSHelper, "ping", return_value=ping_sent
+        TBANSHelper, "ping", return_value=ping_response
     ) as mock_ping:
         response = web_client.post(
             "/account/ping", data={"mobile_client_id": c1.key.id()}
@@ -644,7 +644,8 @@ def test_ping_client(
     mock_ping.assert_called_with(c1)
 
     with web_client.session_transaction() as session:
-        assert session.get("ping_sent") == expected
+        print(session.get("ping_response"))
+        assert session.get("ping_response") == expected
 
     assert response.status_code == 302
     parsed_response = urlparse(response.headers["Location"])
@@ -678,7 +679,7 @@ def test_ping_not_our_client(
     mock_ping.assert_not_called()
 
     with web_client.session_transaction() as session:
-        assert session.get("ping_sent") == "0"
+        assert session.get("ping_response") == "No clients found"
 
     assert response.status_code == 302
     parsed_response = urlparse(response.headers["Location"])

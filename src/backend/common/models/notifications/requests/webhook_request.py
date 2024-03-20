@@ -1,8 +1,11 @@
 import json
 
+import logging
 import requests
 
 from backend.common.models.notifications.requests.request import Request
+from typing import Optional
+from urllib3.exceptions import MaxRetryError
 
 
 WEBHOOK_VERSION = 1
@@ -34,7 +37,7 @@ class WebhookRequest(Request):
             str(self.notification), self.url
         )
 
-    def send(self) -> bool:
+    def send(self) -> Optional[str]:
         """Attempt to send the notification."""
         # Build the request
         headers = {
@@ -49,18 +52,22 @@ class WebhookRequest(Request):
 
         # TODO: Consider more useful way to surface error messages
         # https://github.com/the-blue-alliance/the-blue-alliance/issues/2576
-        valid_url = True
+        err = None
 
         try:
             response = requests.post(self.url, data=payload, headers=headers)
             if response.status_code == requests.codes.ok:
                 self.defer_track_notification(1)
-            elif response.status_code == 404:
-                valid_url = False
-        except Exception:
-            pass
+            else:
+                response.raise_for_status()
+        except requests.exceptions.HTTPError as error:
+            logging.error(error)
+            err = str(error)
+        except Exception as error:
+            logging.error(error)
+            err = f'Unknown error: {error}'
 
-        return valid_url
+        return err
 
     def _json_string(self) -> str:
         """JSON dict representation of an WebhookRequest object.

@@ -88,7 +88,7 @@ def test_overview(
     context_keys = {
         "status",
         "webhook_verification_success",
-        "ping_sent",
+        "ping_response",
         "ping_enabled",
         "auth_write_type_names",
         "user",
@@ -221,17 +221,17 @@ def test_overview_no_webhook_verification_success(
     assert webhook_row is None
 
 
-@pytest.mark.parametrize("ping_sent, success", [("1", True), ("0", False)])
-def test_overview_ping_sent(
+@pytest.mark.parametrize("ping_response, success", [("1", True), ("0", False)])
+def test_overview_ping_response(
     login_user,
-    ping_sent: str,
+    ping_response: str,
     success: bool,
     captured_templates: List[CapturedTemplate],
     web_client: FlaskClient,
 ) -> None:
     with web_client:
         with web_client.session_transaction() as session:
-            session["ping_sent"] = ping_sent
+            session["ping_response"] = ping_response
         response = web_client.get("/account")
 
     assert response.status_code == 200
@@ -240,7 +240,7 @@ def test_overview_ping_sent(
     template = captured_templates[0][0]
     context = captured_templates[0][1]
     assert template.name == "account_overview.html"
-    assert context["ping_sent"] == ping_sent
+    assert context["ping_response"] == ping_response
 
     soup = bs4.BeautifulSoup(response.data, "html.parser")
     ping_row = soup.find(id="ping-row", attrs={"class": "row"})
@@ -253,7 +253,7 @@ def test_overview_ping_sent(
     )
 
 
-def test_overview_no_ping_sent(
+def test_overview_no_ping_response(
     login_user,
     captured_templates: List[CapturedTemplate],
     web_client: FlaskClient,
@@ -266,7 +266,7 @@ def test_overview_no_ping_sent(
     template = captured_templates[0][0]
     context = captured_templates[0][1]
     assert template.name == "account_overview.html"
-    assert context["ping_sent"] is None
+    assert context["ping_response"] is None
 
     soup = bs4.BeautifulSoup(response.data, "html.parser")
     ping_row = soup.find(id="ping-row", attrs={"class": "row"})

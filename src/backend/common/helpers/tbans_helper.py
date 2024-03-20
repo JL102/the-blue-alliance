@@ -354,7 +354,7 @@ class TBANSHelper:
         )
 
     @staticmethod
-    def ping(client: MobileClient) -> bool:
+    def ping(client: MobileClient) -> Optional[str]:
         """Immediately dispatch a Ping to either FCM or a webhook"""
         if client.client_type == ClientType.WEBHOOK:
             return TBANSHelper._ping_webhook(client)
@@ -362,7 +362,7 @@ class TBANSHelper:
             return TBANSHelper._ping_client(client)
 
     @staticmethod
-    def _ping_client(client: MobileClient) -> bool:
+    def _ping_client(client: MobileClient) -> Optional[str]:
         client_type = client.client_type
         if client_type in FCM_CLIENTS or client_type in FCM_LEGACY_CLIENTS:
             from backend.common.models.notifications.ping import (
@@ -385,14 +385,14 @@ class TBANSHelper:
 
             batch_response = fcm_request.send()
             if batch_response.failure_count > 0:
-                return False
+                return f'{batch_response.failure_count} failed to send'
         else:
             raise Exception("Unsupported FCM client type: {}".format(client_type))
 
-        return True
+        return None
 
     @staticmethod
-    def _ping_webhook(client: MobileClient) -> bool:
+    def _ping_webhook(client: MobileClient) -> Optional[str]:
         from backend.common.models.notifications.ping import PingNotification
 
         notification = PingNotification()
