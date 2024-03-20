@@ -110,10 +110,10 @@ def test_send():
     with patch(
         "requests.post", return_value=Mock(status_code=200)
     ) as mock_post, patch.object(message, "defer_track_notification") as mock_track:
-        success = message.send()
+        response = message.send()
     mock_post.assert_called_once()
     mock_track.assert_called_once_with(1)
-    assert success
+    assert response is None
 
 
 @pytest.mark.parametrize("code", [400, 401, 500])
@@ -127,10 +127,10 @@ def test_send_errors(code):
     with patch(
         "requests.post", return_value=Mock(status_code=code)
     ) as mock_post, patch.object(message, "defer_track_notification") as mock_track:
-        success = message.send()
+        response = message.send()
     mock_post.assert_called_once()
     mock_track.assert_not_called()
-    assert success
+    assert response is None
 
 
 def test_send_error_unknown():
@@ -143,10 +143,10 @@ def test_send_error_unknown():
     with patch(
         "requests.post", return_value=Mock(status_code=-1)
     ) as mock_post, patch.object(message, "defer_track_notification") as mock_track:
-        success = message.send()
+        response = message.send()
     mock_post.assert_called_once()
     mock_track.assert_not_called()
-    assert success
+    assert response is None
 
 
 def test_send_fail_404():
@@ -159,10 +159,10 @@ def test_send_fail_404():
     with patch(
         "requests.post", return_value=Mock(status_code=404)
     ) as mock_post, patch.object(message, "defer_track_notification") as mock_track:
-        success = message.send()
+        response = message.send()
     mock_post.assert_called_once()
     mock_track.assert_not_called()
-    assert not success
+    assert not response is None
 
 
 def test_send_error_other():
